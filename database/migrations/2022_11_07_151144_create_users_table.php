@@ -17,6 +17,7 @@ class CreateUsersTable extends Migration
             $table->string('client_id')->nullable();
             $table->string('client_secret')->nullable();
             $table->string('vertical_type')->nullable();
+            $table->string('username')->nullable();
             $table->string('phone')->nullable();
             $table->string('role')->nullable();
             $table->string('lpseId')->nullable();
@@ -37,6 +38,8 @@ class CreateUsersTable extends Migration
      */
     public function down()
     {
-        // Schema::dropIfExists('users');
+        Schema::table('users', function ($table) {
+            $table->dropColumn(['client_id']);
+        });
     }
 }
