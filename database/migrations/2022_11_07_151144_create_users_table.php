@@ -39,7 +39,7 @@ class CreateUsersTable extends Migration
     public function down()
     {
         Schema::table('users', function ($table) {
-            $table->dropColumn(['client_id']);
+            $table->dropColumn(['client_id', 'client_secret','vertical_type','username','phone','lpseId','isLatihan','time','idInstansi','namaInstansi','idSatker','namaSatker','token_lkpp']);
         });
     }
 }

@@ -22,15 +22,15 @@ class GetKeyController extends Controller
             'username' => 'required|string',
         ]);
 
-        $xClientId = Str::random(8);
-        $xClientSecret = Str::random(18);
+        $xClientId = Str::random(10);
+        $xClientSecret = Str::random(20);
      
 
     $registerDetails = DetailsLkpp::create(array(
             'username'          => $request->input('username'),
             'x-client-id'       => $xClientId,
             'x-client-secret'   => $xClientSecret,
-            'x-vertical-type'   => $request->input('x-vertical-type'),
+            // 'x-vertical-type'   => $request->input('x-vertical-type'),
         ));
 
     if($registerDetails){  

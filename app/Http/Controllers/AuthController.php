@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Gate;
 use App\Providers\LkppUserProvider;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 class AuthController extends Controller
 {
@@ -43,7 +45,7 @@ class AuthController extends Controller
         return response()->json(array(
                 'code' => 400,
                 'data' => null,
-                'message' => 'ClientID & ClientSecret Salah',
+                'message' => 'ClientID atau ClientSecret Salah',
                 'status' => false
             ), 400);
     }else{
@@ -53,13 +55,46 @@ class AuthController extends Controller
 
         $j_data = json_decode($j_data, true);
 
-        $eml = $j_data['payload']['email'];
+        $email = $j_data['payload']['email'];
+        $usrname = $j_data['payload']['userName'];
 
 
-    $userExist = UserLkpp::where('email', $eml)
-        ->first();
+    $userExist = UserLkpp::where('email', $email)
+                ->orWhere('username', $usrname )
+                ->first();
+
+if($userExist){
+
+    $user = UserLkpp::where('email', $email)->first();
+    $token = JWTAuth::fromUser($user);
+
+    return response()->json(array(
+        'code' => 200,
+        'data' => [
+            'token' => $token
+        ],
+        'message' => null,
+        'status' => true
+    ), 200);
+}else{
+   
+    $token_register = $j_data['token'];
+
+   
+        $client = new Client();
+        $guzzleResponse = $client->post(
+                'https://dev-tokodaring-api.lkpp.go.id/uma/sso/auth', [
+                'headers' => [
+                    'Authorization'=> "Bearer {$token_register}"
+                ],
+            ]);
 
 
+        $register_response = json_decode($guzzleResponse->getBody()->getContents());
+
+        dd($register_response);
+        
+}
 if($userExist == null){
         $register = UserLkpp::create(array(
             'last_name'          => $j_data['payload']['userName'],
@@ -81,35 +116,33 @@ if($userExist == null){
     }
 
 
-    $user = UserLkpp::where('email', $eml)->first();
+}
 
-    $token = JWTAuth::fromUser($user);
-  if($token){
-         return response()->json(array(
-                'code' => 200,
-                'data' => [
-                    'token' => $token
-                ],
-                'message' => null,
-                'status' => true
-            ), 200);
-        }else{
-            return response()->json(array(
-                    'code' => 200,
-                    'data' => null,
-                    'message' => 'The requested object was not found.',
-                    'status' => false
-                ), 200);
+
+
+
+//     $user = UserLkpp::where('email', $eml)->first();
+
+//     $token = JWTAuth::fromUser($user);
+//   if($token){
+//          return response()->json(array(
+//                 'code' => 200,
+//                 'data' => [
+//                     'token' => $token
+//                 ],
+//                 'message' => null,
+//                 'status' => true
+//             ), 200);
+//         }else{
+//             return response()->json(array(
+//                     'code' => 200,
+//                     'data' => null,
+//                     'message' => 'The requested object was not found.',
+//                     'status' => false
+//                 ), 200);
 
         }
 
     }   
-}
 
-
-   
-
-
-
-}
 ?>
