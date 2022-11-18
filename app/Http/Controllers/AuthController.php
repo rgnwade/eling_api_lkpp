@@ -17,6 +17,7 @@ use App\Providers\LkppUserProvider;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\GuzzleException;
 
 class AuthController extends Controller
 {
@@ -63,86 +64,88 @@ class AuthController extends Controller
                 ->orWhere('username', $usrname )
                 ->first();
 
-if($userExist){
 
-    $user = UserLkpp::where('email', $email)->first();
-    $token = JWTAuth::fromUser($user);
+            //Cek user
+            if($userExist){
 
-    return response()->json(array(
-        'code' => 200,
-        'data' => [
-            'token' => $token
-        ],
-        'message' => null,
-        'status' => true
-    ), 200);
-}else{
-   
-    $token_register = $j_data['token'];
+                $user = UserLkpp::where('email', $email)->first();
+                $token = JWTAuth::fromUser($user);
 
-   
-        $client = new Client();
-        $guzzleResponse = $client->post(
-                'https://dev-tokodaring-api.lkpp.go.id/uma/sso/auth', [
-                'headers' => [
-                    'Authorization'=> "Bearer {$token_register}"
+                return response()->json(array(
+                    'code' => 200,
+                    'data' => [
+                        'token' => $token
+                    ],
+                    'message' => null,
+                    'status' => true
+                ), 200);
+            }else{
+            
+                $token_register = $j_data['token'];
+
+                $client = new \GuzzleHttp\Client(['headers' => [
+                'Authorization' => 'Bearer ' . $token_register,        
+                'Accept'        => 'application/json',
                 ],
+                'http_errors' => false
             ]);
+            
+                  $get_data1 = $client->requestAsync('POST','https://dev-tokodaring-api.lkpp.go.id/uma/sso/auth')->then( function ($response) {
+                                    return json_decode($response->getBody()->getContents());
+                                  }
+                                  );
+            
+                    $response_get_token = $get_data1->wait();
 
+                    // dd($response_get_token);
+    
+                    if ($response_get_token->code===200){
 
-        $register_response = json_decode($guzzleResponse->getBody()->getContents());
+                        $register = UserLkpp::create(array(
+                                        'last_name'         => $j_data['payload']['userName'],
+                                        'first_name'        => $j_data['payload']['realName'],
+                                        'phone'             => $j_data['payload']['phone'],
+                                        'role'              => $j_data['payload']['role'],
+                                        'lpseId'            => $j_data['payload']['lpseId'],
+                                        'isLatihan'         => $j_data['payload']['isLatihan'],
+                                        'email'             => $j_data['payload']['email'],
+                                        'time'              => $j_data['payload']['time'],
+                                        'idInstansi'        => $j_data['payload']['idInstansi'],
+                                        'namaInstansi'      => $j_data['payload']['namaInstansi'],
+                                        'idSatker'          => $j_data['payload']['idSatker'],
+                                        'namaSatker'        => $j_data['payload']['namaSatker'],
+                                        'token_lkpp'        => $j_data['token'],
+                                        'password'          => "0",
+                                        'uuid'              => "false"
+                                    ));
 
-        dd($register_response);
-        
-}
-if($userExist == null){
-        $register = UserLkpp::create(array(
-            'last_name'          => $j_data['payload']['userName'],
-            'first_name'          => $j_data['payload']['realName'],
-            'phone'             => $j_data['payload']['phone'],
-            'role'              => $j_data['payload']['role'],
-            'lpseId'            => $j_data['payload']['lpseId'],
-            'isLatihan'         => $j_data['payload']['isLatihan'],
-            'email'             => $j_data['payload']['email'],
-            'time'              => $j_data['payload']['time'],
-            'idInstansi'        => $j_data['payload']['idInstansi'],
-            'namaInstansi'      => $j_data['payload']['namaInstansi'],
-            'idSatker'          => $j_data['payload']['idSatker'],
-            'namaSatker'        => $j_data['payload']['namaSatker'],
-            'token_lkpp'        => $j_data['token'],
-            'password'          => "0",
-            'uuid'              => "false"
-        ));
-    }
-
-
-}
-
-
-
-
-//     $user = UserLkpp::where('email', $eml)->first();
-
-//     $token = JWTAuth::fromUser($user);
-//   if($token){
-//          return response()->json(array(
-//                 'code' => 200,
-//                 'data' => [
-//                     'token' => $token
-//                 ],
-//                 'message' => null,
-//                 'status' => true
-//             ), 200);
-//         }else{
-//             return response()->json(array(
-//                     'code' => 200,
-//                     'data' => null,
-//                     'message' => 'The requested object was not found.',
-//                     'status' => false
-//                 ), 200);
-
+                                    if($register){
+                                                 return response()->json(array(
+                                                        'code' => 200,
+                                                        'data' => $register,
+                                                        'message' => "Token is valid",
+                                                        'status' => true
+                                                    ), 200);
+                                                }else{
+                                                    return response()->json(array(
+                                                            'code' => 400,
+                                                            'message' => 'Token is invalid',
+                                                            'status' => false
+                                                        ), 200); 
+                                    }
+                    }else{
+                        return response()->json(array(
+                            'code' => 400,
+                            'message' => 'Token is invalid',
+                            'status' => false
+                        ), 200); 
+                    }
+            }
         }
 
-    }   
+
+
+     }
+}
 
 ?>
