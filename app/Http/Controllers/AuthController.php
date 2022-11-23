@@ -83,22 +83,11 @@ class AuthController extends Controller
                     ]
                 ]);
 
-                dd($response1);
-
                 $user_data = UserLkpp::where('email', $email)
-                ->value('api_token');
+                ->value('api_token');   
 
-              
-
-                if($user_data === null){
-                    $token = Str::random(80);
-
-                $update = UserLkpp::where('email', $email)->update([
-                    'api_token'        => hash('sha256', $token)
-                ]);
-            }
-          
-                            if($user_data !== null){
+                if($user_data){
+           
                             return response()->json(array(
                                 'code' => 200,
                                 'data' => [
