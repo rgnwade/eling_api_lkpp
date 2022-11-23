@@ -75,12 +75,6 @@ class AuthController extends Controller
                 $user_id = UserLkpp::where('email', $email)->value('id');
                 // $token = JWTAuth::fromUser($user);
 
-                $register = Activations::create(array(
-                    'user_id'         => $user_id,
-                    'code'            => Str::random(32),
-                    'completed'       => '1'
-                ));
-
                 $client1 = new \GuzzleHttp\Client();
                 $response1 = $client1->request('POST', 'https://staging.eling.co.id/login', [
                     'form_params' => [
@@ -91,8 +85,12 @@ class AuthController extends Controller
 
                 $user_data = UserLkpp::where('email', $email)
                 ->value('api_token');
+
+                $update = UserLkpp::where('email', $email)->update([
+                    'api_token'        => $user_data
+                ]);
           
-                            if($response1){
+                            if($update){
                             return response()->json(array(
                                 'code' => 200,
                                 'data' => [
