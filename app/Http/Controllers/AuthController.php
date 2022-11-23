@@ -130,7 +130,7 @@ class AuthController extends Controller
 
                     // dd($response_get_token);
     
-                    if ($response_get_token->code===400){
+                    if ($response_get_token->code===200){
 
                         $register = UserLkpp::create(array(
                                         'last_name'         => $j_data['payload']['userName'],
