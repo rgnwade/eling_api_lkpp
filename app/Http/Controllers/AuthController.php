@@ -75,10 +75,18 @@ class AuthController extends Controller
                 $token = JWTAuth::fromUser($user);
 
                 $update = UserLkpp::where('email', $email)->update([
-                    'api_token'     => $token
+                    'api_token'     => $token,
+                    'status'        => 'verified'
                 ]);
 
-                            if($update){
+                $client1 = new \GuzzleHttp\Client();
+                $response1 = $client1->request('POST', 'https://staging.eling.co.id/login', [
+                    'form_params' => [
+                        'email' => $email,
+                        'password' => '123123',
+                    ]
+                ]);
+                            if($response1){
                             return response()->json(array(
                                 'code' => 200,
                                 'data' => [
@@ -137,14 +145,23 @@ class AuthController extends Controller
                                     ));
 
                                     if($register){
+                                        $email1 = $register->email;
 
-                                        $user = UserLkpp::where('email', $email)->first();
+                                        $user = UserLkpp::where('email', $email1)->first();
                                         $token = JWTAuth::fromUser($user);
-                                        $update_areg = UserLkpp::where('email', $email)->update([
-                                            'api_token'     => $token
+                                        $update_areg = UserLkpp::where('email', $email1)->update([
+                                            'api_token'     => $token,
+                                            'status'        => 'verified'
+                                        ]);
+                                        $client2 = new \GuzzleHttp\Client();
+                                        $response2 = $client2->request('POST', 'https://staging.eling.co.id/login', [
+                                            'form_params' => [
+                                                'email' => $email1,
+                                                'password' => '123123',
+                                            ]
                                         ]);
 
-                                                                if($update_areg){
+                                                                if($response2){
                                                                     return response()->json(array(
                                                                             'code' => 200,
                                                                             'data' => [
