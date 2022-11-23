@@ -151,27 +151,31 @@ class AuthController extends Controller
                                     ));
 
                                     if($register){
-                                        $email1 = $register->email;
-
-                                        $user = UserLkpp::where('email', $email1)->first();
-                                        $token = JWTAuth::fromUser($user);
-                                        $update_areg = UserLkpp::where('email', $email1)->update([
-                                            'api_token'     => $token,
-                                            'status'        => 'verified'
-                                        ]);
+                                        $user_id2 = UserLkpp::where('email', $email)->value('id');
+                                        // $token = JWTAuth::fromUser($user);
+                        
+                                        $register2 = Activations::create(array(
+                                            'user_id'         => $user_id2,
+                                            'code'            => Str::random(32),
+                                            'completed'       => '1'
+                                        ));
+                        
                                         $client2 = new \GuzzleHttp\Client();
                                         $response2 = $client2->request('POST', 'https://staging.eling.co.id/login', [
                                             'form_params' => [
-                                                'email' => $email1,
+                                                'email' => $email,
                                                 'password' => '123123',
                                             ]
                                         ]);
+                        
+                                        $user_data2 = UserLkpp::where('email', $email)
+                                        ->value('api_token');
 
                                                                 if($response2){
                                                                     return response()->json(array(
                                                                             'code' => 200,
                                                                             'data' => [
-                                                                                    'token' => $token
+                                                                                    'token' => $user_data2
                                                                             ],
                                                                             'message' => "Token is valid",
                                                                             'status' => true
