@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\DetailsLkpp;
 use App\Models\UserLkpp;
+use App\Models\Activations;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use DB;
@@ -71,26 +72,31 @@ class AuthController extends Controller
             //Cek user
             if($userExist){
 
-                $user = UserLkpp::where('email', $email)->first();
-                $token = JWTAuth::fromUser($user);
+                $user_id = UserLkpp::where('email', $email)->value('id');
+                // $token = JWTAuth::fromUser($user);
 
-                $update = UserLkpp::where('email', $email)->update([
-                    'api_token'     => $token,
-                    'status'        => 'verified'
-                ]);
+                $register = Activations::create(array(
+                    'user_id'         => $user_id,
+                    'code'            => Str::random(32),
+                    'completed'       => '1'
+                ));
 
                 $client1 = new \GuzzleHttp\Client();
-                $response1 = $client1->request('POST', 'https://staging.eling.co.id/login', [
+                $response1 = $client1->request('POST', 'http://127.0.0.1:8000/login', [
                     'form_params' => [
                         'email' => $email,
                         'password' => '123123',
                     ]
                 ]);
+
+                $user_data = UserLkpp::where('email', $email)
+                ->value('api_token');
+          
                             if($response1){
                             return response()->json(array(
                                 'code' => 200,
                                 'data' => [
-                                    'token' => $token
+                                    'token' => $user_data
                                 ],
                                 'message' => null,
                                 'status' => true
