@@ -19,6 +19,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\GuzzleException;
 
+
 class AuthController extends Controller
 {
     /**
@@ -36,11 +37,13 @@ class AuthController extends Controller
 
     public function ssoLogin(Request $request)
     {
-
+        
+        $uuid = Str::uuid()->toString();
+        $password = Hash::make('123123');
         $xClientId = DetailsLkpp::where('x-client-id', $request->header('X-Client-ID'))->first();
         $xClientSecret = DetailsLkpp::where('x-client-secret', $request->header('X-Client-Secret'))->first();
 
-
+      
 
     if($xClientId == null || $xClientSecret == null){
         return response()->json(array(
@@ -71,14 +74,28 @@ class AuthController extends Controller
                 $user = UserLkpp::where('email', $email)->first();
                 $token = JWTAuth::fromUser($user);
 
-                return response()->json(array(
-                    'code' => 200,
-                    'data' => [
-                        'token' => $token
-                    ],
-                    'message' => null,
-                    'status' => true
-                ), 200);
+                $update = UserLkpp::where('email', $email)->update([
+                    'api_token'     => $token
+                ]);
+
+                            if($update){
+                            return response()->json(array(
+                                'code' => 200,
+                                'data' => [
+                                    'token' => $token
+                                ],
+                                'message' => null,
+                                'status' => true
+                            ), 200);
+                        }else{
+                            return response()->json(array(
+                                'code' => 200,
+                                'data' => null,
+                                'message' => 'Token Invalid',
+                                'status' => false
+                            ), 200);
+                        }
+
             }else{
             
                 $token_register = $j_data['token'];
@@ -99,7 +116,7 @@ class AuthController extends Controller
 
                     // dd($response_get_token);
     
-                    if ($response_get_token->code===200){
+                    if ($response_get_token->code===400){
 
                         $register = UserLkpp::create(array(
                                         'last_name'         => $j_data['payload']['userName'],
@@ -115,17 +132,38 @@ class AuthController extends Controller
                                         'idSatker'          => $j_data['payload']['idSatker'],
                                         'namaSatker'        => $j_data['payload']['namaSatker'],
                                         'token_lkpp'        => $j_data['token'],
-                                        'password'          => "0",
-                                        'uuid'              => "false"
+                                        'password'          => $password,
+                                        'uuid'              => $uuid
                                     ));
 
                                     if($register){
-                                                 return response()->json(array(
-                                                        'code' => 200,
-                                                        'data' => $register,
-                                                        'message' => "Token is valid",
-                                                        'status' => true
-                                                    ), 200);
+
+                                        $user = UserLkpp::where('email', $email)->first();
+                                        $token = JWTAuth::fromUser($user);
+                                        $update_areg = UserLkpp::where('email', $email)->update([
+                                            'api_token'     => $token
+                                        ]);
+
+                                                                if($update_areg){
+                                                                    return response()->json(array(
+                                                                            'code' => 200,
+                                                                            'data' => [
+                                                                                    'token' => $token
+                                                                            ],
+                                                                            'message' => "Token is valid",
+                                                                            'status' => true
+                                                                        ), 200);
+                                                                }else{
+                                                                    return response()->json(array(
+                                                                        'code' => 200,
+                                                                        'data' => null,
+                                                                        'message' => 'Token Invalid',
+                                                                        'status' => false
+                                                                    ), 200);
+
+                                                                }
+
+
                                                 }else{
                                                     return response()->json(array(
                                                             'code' => 400,
