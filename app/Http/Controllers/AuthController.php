@@ -83,10 +83,12 @@ class AuthController extends Controller
                     ]
                 ]);
 
+                dd($response1);
+
                 $user_data = UserLkpp::where('email', $email)
                 ->value('api_token');
 
-                dd($user_data);
+              
 
                 if($user_data === null){
                     $token = Str::random(80);
