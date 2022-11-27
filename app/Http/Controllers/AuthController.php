@@ -87,7 +87,9 @@ class AuthController extends Controller
                 ->value('api_token');   
 
                 if($user_data){
-           
+                    $client1 = new \GuzzleHttp\Client();
+                    $response1 = $client1->request('GET', 'https://staging.eling.co.id/autologin/'.$user_data.'');
+
                             return response()->json(array(
                                 'code' => 200,
                                 'data' => [
