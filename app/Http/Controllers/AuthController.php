@@ -76,7 +76,7 @@ class AuthController extends Controller
                 // $token = JWTAuth::fromUser($user);
 
                 $client1 = new \GuzzleHttp\Client();
-                $response1 = $client1->request('POST', 'http://127.0.0.1:8000/login', [
+                $response1 = $client1->request('POST', 'https://staging.eling.co.id/login', [
                     'form_params' => [
                         'email' => $email,
                         'password' => '123123',
