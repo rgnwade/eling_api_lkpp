@@ -76,7 +76,7 @@ class AuthController extends Controller
                 // $token = JWTAuth::fromUser($user);
 
                 $client1 = new \GuzzleHttp\Client();
-                $response1 = $client1->request('POST', 'https://staging.eling.co.id/login', [
+                $response1 = $client1->request('POST', 'http://127.0.0.1:8000/login', [
                     'form_params' => [
                         'email' => $email,
                         'password' => '123123',
@@ -86,13 +86,17 @@ class AuthController extends Controller
                 $user_data = UserLkpp::where('email', $email)
                 ->value('api_token');   
 
-                // $clientlogin = new \GuzzleHttp\Client();
-                // $responseLogin = $clientlogin->request('GET', 'https://staging.eling.co.id/autologin/'.$user_data.'');
+                // $responseLogin = $client1->request('GET', 'http://127.0.0.1:8000//autologin/'.$user_data.'');
 
-                $triggerLogin = file_get_contents('https://staging.eling.co.id/autologin/'.$user_data.'');
+                // // $triggerLogin = file_get_contents('https://staging.eling.co.id/autologin/'.$user_data.'');
 
+                // dd($responseLogin);
 
-                if($triggerLogin !== null){
+                $user = UserLkpp::where('api_token', $user_data)->firstOrFail();
+
+                $forceLogin = Auth::login($user); // login user automatically
+              
+                if($forceLogin){
                             return response()->json(array(
                                 'code' => 200,
                                 'data' => [
